@@ -1,109 +1,92 @@
 #!/usr/bin/env python2
-#Sviluppatore: Andrea De Angelis - Dea1993
-#sito internet http://deasproject.altervista.org
 
 import pygame, sys, random, time, pickle, platform, numpy, os.path
 from pygame.locals import *
 pygame.init()
 
-
+ 
 #@@@@@SETUP@@@@@#
 
-#imposto fps
-FPS = 60
+#set speed
+FPS = 10
 fpsClock = pygame.time.Clock()
 
-#imposto font dei caratteri
+#set font
 font = pygame.font.Font(None, 24)
 
-#imposto valore del volume di default
+#set volume
 volume = 0.2
 
-#inizializzo colori che andro' ad usare nel gioco
-BIANCO = (255, 255, 255)
-VERDE = (0, 200, 0)
-VERDE_SCURO = (0, 100 , 0)
+#colors
+WHITE = (255, 255, 255)
+GREEN = (0, 200, 0)
+LIGHTGREEN = (0, 100 , 0)
 
-#assegno alle 2 variabili le dimensioni che deve assumere la finestra
-size_w = 555		#larghezza
-size_h = 404		#altezza
+#window size
+size_w = 555		#width
+size_h = 404		#height
 
-#imposto dimensioni e nome finestra
+#size + window name
 surface = pygame.display.set_mode((size_w, size_h))
-pygame.display.set_caption('snake 0.7.2')
+pygame.display.set_caption('Our Snake Game by: Matthew and Calib')
 
-#carico tutte le immagini che usero' nel gioco
-sfondo = pygame.image.load("Immagini/sfondo.png")					#immagine di sfondo
-gameover_img = pygame.image.load("Immagini/gameover.png")			#immagine per il gameover
-nuovo_record = pygame.image.load("Immagini/nuovo_record.png")		#immagine per nuovo record
-mela = pygame.image.load("Immagini/mela.png")						#immagine della mela
-teschio = pygame.image.load("Immagini/teschio.png")				#immagine del teschio
-dimezza = pygame.image.load("Immagini/dimezza_coda.png")			#immagine del bonus dimezza coda
-pausa_img = pygame.image.load("Immagini/pausa.png")				#immagine schermata di pausa
-icona = pygame.image.load('Immagini/snake_pygame-icon.png')			#immagine dell'icona del gioco
+#images
+backgroung = pygame.image.load("images/background.png")					#background image
+gameover = pygame.image.load("images/gameover.png")			#gameover image
+new_record = pygame.image.load("images/new_record.png")		#new record
+food = pygame.image.load("images/food.png")						#food icon
+death = pygame.image.load("images/death.png")				#death
+bonus = pygame.image.load("images/bonus.png")			#bonus
+pause = pygame.image.load("images/pause.png")				#pause
+icon = pygame.image.load('images/icon.png')			#game icon
 
-#imposto icona del gioco
-pygame.display.set_icon(icona)
+#game icon 
+pygame.display.set_icon(icon)
 
-#creo il serpente
-snake = pygame.Surface((14, 14))			#creo un quadrato (14x14) snake che sara' il corpo del serpente
-snake_testa = pygame.Surface((14, 14))	#snake_testa e' la testa del serpente, la differenzio dal corpo per potergli assegnare un colore diverso
-snake.fill(VERDE_SCURO)					#coloro di verde scuro il corpo del serpente
-snake_testa.fill(VERDE)					#coloro di verde chiaro la testa del serpente
-
-OS = platform.system()		#guardo il sistema operativo
+#snake create
+snake = pygame.Surface((14, 14))			#create board
+snake_testa = pygame.Surface((14, 14))	#create snake head
+snake.fill(LIGHTGREEN)					#SnakeBody
+snake_testa.fill(GREEN)					#SnakeHead
+OS = platform.system()		#check OS
 
 if OS == "Linux":
 	from xdg import BaseDirectory
-	path_data = BaseDirectory.save_config_path('snake_pygame/')	#imposto il path per il file del record	
+	path_data = BaseDirectory.save_config_path('snake_pygame/')	#where record file will be saved
 
-	#se la cartella del gioco contenente il record non esiste la creo e creo anche il file record.txt impostando il record a 0
+	#create record file 
 	if not os.path.exists(path_data):
-		#la cartella non esiste
-		os.mkdir(path_data)								#creo la cartella
+		#file does not exist
+		os.mkdir(path_data)								#create file
 
-elif OS == "Windows":
-	path_data = os.path.expanduser("~\\")+"snake_pygame\\"
+#START FUNCTIONS#
 
-	if not os.path.exists(path_data):
-		#la cartella non esiste
-		os.mkdir(path_data)
-
-else:		#per gli altri sistemi operativi crea la cartella record all'interno della cartella di gioco
-	path_data = ("Record/")
-	
-	if not os.path.exists(path_data):
-		#la cartella non esiste
-		os.mkdir(path_data)
-
-#@@@@@INIZIALIZZAZIONI FUNZIONI@@@@@#
-
-#qui ci sono le variabili che devono essere inizializzate all'inizio del programma e dopo il restart
-def inizializzazione():
-	global volume, punti, snake_x, snake_y, min, max_x, max_y, direzione, direzione_precedente, difficolta, record, bonus_icon, bonus_x, bonus_y
+#before start and after restart
+def init():
+	global volume, points, snake_x, snake_y, min, max_x, max_y, direction, previous_direction, difficulty, record, bonus_icon, bonus_x, bonus_y
 	
 	try:
-		record_file = open(path_data+"record.txt","r")		#apro il file record.txt in sola lettura e lo assegno alla variabile record
+		record_file = open(path_data+"record.txt","r")		#check record
 	except:
-		record_file = open(path_data+"record.txt","w")		#se il file record.txt non esiste lo creo assegnando il record a 0
+		record_file = open(path_data+"record.txt","w")		#if record file no exist
 		record_file.write("0")
 		record_file.close()
 		record_file = open(path_data+"record.txt","r")
 	
-	record = int(record_file.read())					#apro il file e leggo il miglior punteggio
-	record_file.close()								#chiudo il file precedentemente aperto
-	pygame.mixer.music.load("Sound/music.ogg")		#carico il file audio
-	pygame.mixer.music.set_volume(volume)			#regolo il volume del file audio (va da 0.0 a 1.0)
-	pygame.mixer.music.play(-1)						#eseguo il file in modalita' loop
-	punti = 0										#punti iniziali del giocatore
-	snake_x = [180, 165, 150, 135, 120, 105]			#creo il serpente 6 blocchi iniziali distanziati di 15px l'uno dall'altro
-	snake_y = [180]*6								#assegno al serpente le stesse coordinate in altezza
-	min = 30										#limite minimo dello spazio usabile dal serpente
-	max_x = 525									#limite massimo dello spazio usabile dal serpente in larghezza
-	max_y = 375									#limite massimo dello spazio usabile dal serpente in altezza
-	direzione_precedente = direzione = 'destra'			#direzione di default in cui si muove il serpente, la variabile "direzione_precedente" serve per ricordare quale era il verso prima di mettere in pausa il gioco
-	difficolta = 0.05								#velocita' iniziale del serpente
-	genera_oggetti(snake_x[0],snake_y[0])				#chiamo la funzione che genera tutti gli oggetti sullo schermo
+	record = int(record_file.read())					#open file and read
+	record_file.close()								#close file
+	pygame.mixer.music.load("Sound/music.ogg")		#music
+	pygame.mixer.music.set_volume(volume)			#set volume
+	pygame.mixer.music.play(-1)						#loops song 
+	points = 0										#sets points to 0
+	snake_x = [180, 165, 150, 135, 120, 105]			#create snake location x
+	snake_y = [180]*6								#create snake location y
+	min = 30										#snake minimum
+	max_x = 525									#maximum snake width
+	max_y = 375									#maximum snake height
+	previous_direction = direction = 'right'			#which direction snake was facing
+	difficolta = 0.05								#speed of snake on start
+	genera_oggetti(snake_x[0],snake_y[0])				#creates it all
 	bonus_icon = '0'
 	bonus_x = bonus_y = 800
 	
@@ -139,13 +122,13 @@ def genera_oggetti(snake_x, snake_y):
 
 #funzione che visualizza gli oggetti a schermo
 def mostra():
-	global direzione
+	global direction
 	
-	punteggio = font.render('Punteggio: %d' % (punti), True, BIANCO)
-	highscore = font.render('Record: %d' % (record), True, BIANCO)
-	vol = font.render('Volume: %d' % (volume*5), True, BIANCO)
-	bonus = font.render('Bonus: [      ]', True, BIANCO)
-	surface.blit(sfondo, (0, 0))	
+	punteggio = font.render('Punteggio: %d' % (points), True, WHITE)
+	highscore = font.render('Record: %d' % (record), True, WHITE)
+	vol = font.render('Volume: %d' % (volume*5), True, WHITE)
+	bonus = font.render('Bonus: [      ]', True, WHITE)
+	surface.blit(background, (0, 0))	
 	surface.blit(punteggio, (30, 8))
 	surface.blit(highscore, (430, 8))
 	surface.blit(vol, (30, 382))
@@ -176,7 +159,7 @@ def scrivi():
 	
 	for event in pygame.event.get():				#controllo la pressione del tasto
 		if event.key == K_r:						#se premo "r" chiama la funzione inizializzazione()
-			inizializzazione()
+			init()
 		elif event.key == K_ESCAPE:				#se premo "ESC" vai alla funzione game_over()
 			game_over()
 
@@ -202,7 +185,7 @@ def restart():
 			#controllo quali tasti vengono premuti
 			elif event.type == KEYDOWN:
 				if event.key == K_r:				#se premo "r" chiama la funzione inizializzazione()
-					inizializzazione()
+					init()
 
 				elif event.key == K_ESCAPE:		#se premo "ESC" vai alla funzione game_over()
 					game_over()
@@ -214,26 +197,26 @@ def game_over():
 
 
 #INIZIO PROGRAMMA
-inizializzazione()			#chiamo la funzione per inizializzare tutte le variabili
+init()			#chiamo la funzione per inizializzare tutte le variabili
 
 while True:
 	#controllo in base ai punti raggiunti quale livello di difficolta' devo settare
-	if punti < 10:
-		difficolta = 0.05
-	elif punti < 30:
-		difficolta = 0.045
-	elif punti < 50:
-		difficolta = 0.04
-	elif punti < 80:
-		difficolta = 0.035
-	elif punti > 80:
-		difficolta = 0.03
+	if points < 10:
+		dificulty = 0.05
+	elif points < 30:
+		dificulty = 0.045
+	elif points < 50:
+		dificulty = 0.04
+	elif points < 80:
+		dificulty = 0.035
+	elif points > 80:
+		dificulty = 0.03
 	
-	incremento_punti = 1+round(punti*difficolta)		#algoritmo per l'incremento del punteggio, la funziona round arrotonda il numero togliendo la parte dopo la virgola
+	incremento_punti = 1+round(points*dificulty)		#algoritmo per l'incremento del punteggio, la funziona round arrotonda il numero togliendo la parte dopo la virgola
 	
-	time.sleep(difficolta)	#e' il tempo che trascorre prima di mostrare il nuovo frame (piu' il tempo e' basso maggiore e' la velocita')
+	time.sleep(dificulty)	#e' il tempo che trascorre prima di mostrare il nuovo frame (piu' il tempo e' basso maggiore e' la velocita')
 	
-	mostra()				#chiamo la funzione che mostra gli elementi a schermo
+	mostra()				#creates it all
 	
 	for event in pygame.event.get():		#controllo la pressione del tasto
 		if event.type == QUIT:			#se viene premuto il tasto chiudi della finestra, vai alla funzione game_over()
@@ -288,7 +271,7 @@ while True:
 				game_over()
 				
 			elif event.key == K_r:
-				inizializzazione()
+				init()
 				
 			elif (event.key == K_SPACE and  bonus_icon == '1' and direzione != 'gameover' and direzione != '0'):
 				bonus_icon = '0'
