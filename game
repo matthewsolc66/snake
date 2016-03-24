@@ -31,7 +31,7 @@ surface = pygame.display.set_mode((size_w, size_h))
 pygame.display.set_caption('Our Snake Game by: Matthew and Calib')
 
 #images
-backgroung = pygame.image.load("images/background.png")					#background image
+background = pygame.image.load("images/background.png")					#background image
 gameover = pygame.image.load("images/gameover.png")			#gameover image
 new_record = pygame.image.load("images/new_record.png")		#new record
 food = pygame.image.load("images/food.png")						#food icon
@@ -190,7 +190,7 @@ def restart():
 				elif event.key == K_ESCAPE:		#se premo "ESC" vai alla funzione game_over()
 					game_over()
 	
-#questa funzione chiude pygame e tutti i moduli caricati
+#questa funzione chiude pygame e tutti i moduli caricati
 def game_over():
 	pygame.quit()
 	sys.exit()
@@ -208,7 +208,7 @@ while True:
 	elif points < 50:
 		dificulty = 0.04
 	elif points < 80:
-		dificulty = 0.035
+		dificulty = 0.035
 	elif points > 80:
 		dificulty = 0.03
 	
